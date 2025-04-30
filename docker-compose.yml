@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+
+  bangkok-earthquake-notify:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: bangkok-earthquake-notify
+    env_file:
+      - .env
+    restart: always
