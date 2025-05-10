@@ -24,7 +24,7 @@ const MIN_MAGNITUDE = 4.0;
 async function fetchEarthquakeData() {
   try {
     const now = new Date();
-    const oneMinuteAgo = new Date(now.getTime() - 2 * 60 * 1000);
+    const oneMinuteAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
     const params = {
       format: 'json',
@@ -33,8 +33,7 @@ async function fetchEarthquakeData() {
       minlat: BBOX.minlat,
       maxlat: BBOX.maxlat,
       minlon: BBOX.minlon,
-      maxlon: BBOX.maxlon,
-      minmag: MIN_MAGNITUDE
+      maxlon: BBOX.maxlon
     };
 
     const response = await axios.get(API_URL, { params });
