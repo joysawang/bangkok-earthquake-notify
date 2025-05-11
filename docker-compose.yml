@@ -31,4 +31,4 @@ volumes:
 
 networks:
   nw-bangkok-earthquake-notify:
-    name: network-bangkok-earthquake-notify
+    driver: bridge
