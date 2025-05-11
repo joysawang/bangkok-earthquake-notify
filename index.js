@@ -28,7 +28,7 @@ async function fetchEarthquakeData() {
 
     const params = {
       format: 'json',
-      starttime: oneMinuteAgo,
+      starttime: oneMinuteAgo.toISOString(),
       endtime: now.toISOString(),
       minlat: BBOX.minlat,
       maxlat: BBOX.maxlat,
