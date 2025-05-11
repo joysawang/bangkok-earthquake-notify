@@ -21,12 +21,7 @@ const MAX_DISTANCE_KM = 2000;
 const MIN_MAGNITUDE = 0.0;
 
 // === Redis setup ===
-const redisClient = createClient({
-  socket: {
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT
-  }
-});
+const redisClient = createClient({ url: process.env.REDIS_URL });
 
 redisClient.on('error', (err) => console.error('❌ Redis error:', err));
 
