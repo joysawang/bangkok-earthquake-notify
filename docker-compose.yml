@@ -11,9 +11,11 @@ services:
       - .env
     restart: always
     depends_on:
-      - redis
+      - earthquake-redis
+    networks:
+      - nw-bangkok-earthquake-notify
 
-  redis:
+  earthquake-redis:
     image: redis:7
     container_name: earthquake-redis
     ports:
@@ -21,6 +23,12 @@ services:
     volumes:
       - redis-data:/data
     restart: always
+    networks:
+      - nw-bangkok-earthquake-notify
 
 volumes:
   redis-data:
+
+networks:
+  nw-bangkok-earthquake-notify:
+    name: network-bangkok-earthquake-notify
