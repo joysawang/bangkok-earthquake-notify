@@ -19,12 +19,12 @@ const BBOX = {
 };
 
 const MAX_DISTANCE_KM = 2000;
-const MIN_MAGNITUDE = 4.0;
+const MIN_MAGNITUDE = 0.0;
 
 async function fetchEarthquakeData() {
   try {
     const now = new Date();
-    const oneMinuteAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    const oneMinuteAgo = new Date(now.getTime() - 1 * 60 * 1000);
 
     const params = {
       format: 'json',
