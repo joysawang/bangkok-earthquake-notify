@@ -82,7 +82,16 @@ async function fetchEarthquakeData() {
         const alreadySent = await redisClient.get(id);
         if (!alreadySent) {
           const distanceFormatted = new Intl.NumberFormat().format(distance.toFixed(1));
-          const timeFormatted = time.toLocaleString('th-TH', { hour12: false });
+          const timeFormatted = time.toLocaleString('th-TH', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
           const message = `⚠️ แผ่นดินไหวแจ้งเตือน ⚠️\n\nสถานที่: ${region}\nขนาด: M${magnitude}\nห่างจากกรุงเทพ: ${distanceFormatted} กม.\nเวลา: ${timeFormatted}`;
           await sendTelegram(message);
           await redisClient.set(id, '1', { EX: 86400 }); // เก็บ eventid ไว้ 1 วัน
