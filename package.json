@@ -12,6 +12,9 @@
     "redis": "^5.0.1"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node bot.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0"
   }
 }

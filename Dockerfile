@@ -6,6 +6,7 @@ WORKDIR /app
 # คัดลอกไฟล์และติดตั้ง dependency
 COPY package*.json ./
 RUN npm install
+RUN npx playwright install
 
 # คัดลอก source code ทั้งหมด
 COPY . .
