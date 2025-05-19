@@ -6,6 +6,8 @@ const { chromium } = require('playwright');
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
+const MIN_MAGNITUDE = 4.0;
+
 // === Redis setup ===
 const redisClient = createClient({ url: process.env.REDIS_URL });
 
@@ -77,7 +79,10 @@ async function checkEarthquakes() {
     for (const item of data) {
       try {
         const alreadySent = await redisClient.get(item.id);
-        if (!alreadySent) {
+        const magnitudeMatch = item.title.match(/ขนาด\s([\d.]+)/);
+        const magnitude = magnitudeMatch ? parseFloat(magnitudeMatch[1]) : null;
+
+        if (!alreadySent && magnitude !== null && magnitude >= MIN_MAGNITUDE) {
           const message = `⚠️ แผ่นดินไหวแจ้งเตือน ⚠️\n\n${item.title}\n${item.description}\nเวลา: ${item.timeFormatted}`;
           await sendTelegram(message);
           await redisClient.set(item.id, '1', { EX: 86400 });
