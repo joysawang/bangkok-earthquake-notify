@@ -1,5 +1,5 @@
 # ✅ ใช้ base image ที่เตรียม Chromium ไว้ให้แล้ว
-FROM mcr.microsoft.com/playwright:v1.52.0-jammy
+FROM mcr.microsoft.com/playwright:v1.55.0-jammy
 
 # ตั้ง working directory
 WORKDIR /app
