@@ -31,11 +31,36 @@ async function checkEarthquakes() {
   console.log('⏰ Running earthquake check...');
 
   let browser;
+  let page;
+  
   try {
-    browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.goto('https://www.tmd.go.th/warning-and-events/warning-earthquake');
-    await page.waitForSelector('#section-list-contentInfo');
+    // เพิ่ม timeout และ options สำหรับ stability
+    browser = await chromium.launch({ 
+      headless: true,
+      timeout: 30000,
+      args: [
+        '--no-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-web-security'
+      ]
+    });
+    
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    });
+    
+    page = await context.newPage();
+    
+    // เพิ่ม timeout สำหรับทุก action
+    page.setDefaultTimeout(30000);
+    
+    await page.goto('https://www.tmd.go.th/warning-and-events/warning-earthquake', {
+      waitUntil: 'networkidle',
+      timeout: 30000
+    });
+    
+    await page.waitForSelector('#section-list-contentInfo', { timeout: 15000 });
 
     const data = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.list-content'))
@@ -76,6 +101,8 @@ async function checkEarthquakes() {
         .filter(Boolean);
     });
 
+    console.log(`📊 Found ${data.length} earthquake records`);
+
     for (const item of data) {
       try {
         const alreadySent = await redisClient.get(item.id);
@@ -86,16 +113,32 @@ async function checkEarthquakes() {
           const message = `⚠️ แผ่นดินไหวแจ้งเตือน ⚠️\n\n${item.title}\n${item.description}\nเวลา: ${item.timeFormatted}`;
           await sendTelegram(message);
           await redisClient.set(item.id, '1', { EX: 86400 });
-          console.log('✅ แจ้งเตือน:', message);
+          console.log('✅ แจ้งเตือน:', item.title);
         }
       } catch (err) {
-        console.error('❌ Redis/set/send error:', err.message);
+        console.error('❌ Redis/send error:', err.message);
       }
     }
+    
   } catch (err) {
     console.error('❌ Scraping error:', err.message);
   } finally {
-    if (browser) await browser.close();
+    // ปิด page และ browser ให้แน่ใจ
+    try {
+      if (page && !page.isClosed()) {
+        await page.close();
+      }
+    } catch (pageErr) {
+      console.error('❌ Page close error:', pageErr.message);
+    }
+    
+    try {
+      if (browser && browser.isConnected()) {
+        await browser.close();
+      }
+    } catch (browserErr) {
+      console.error('❌ Browser close error:', browserErr.message);
+    }
   }
 }
 
@@ -103,10 +146,46 @@ async function checkEarthquakes() {
 async function start() {
   try {
     await redisClient.connect();
+    console.log('✅ Redis connected');
+    
+    // รัน check ครั้งแรก
     await checkEarthquakes();
-    setInterval(checkEarthquakes, 60 * 1000);
+    
+    // ตั้ง interval (60 วินาที)
+    const intervalId = setInterval(async () => {
+      try {
+        await checkEarthquakes();
+      } catch (err) {
+        console.error('❌ Interval check error:', err.message);
+      }
+    }, 60 * 1000);
+    
+    // จัดการ graceful shutdown
+    process.on('SIGTERM', async () => {
+      console.log('🛑 Shutting down gracefully...');
+      clearInterval(intervalId);
+      try {
+        await redisClient.disconnect();
+      } catch (err) {
+        console.error('❌ Redis disconnect error:', err.message);
+      }
+      process.exit(0);
+    });
+    
+    process.on('SIGINT', async () => {
+      console.log('🛑 Shutting down gracefully...');
+      clearInterval(intervalId);
+      try {
+        await redisClient.disconnect();
+      } catch (err) {
+        console.error('❌ Redis disconnect error:', err.message);
+      }
+      process.exit(0);
+    });
+    
   } catch (err) {
     console.error('❌ Start error:', err.message);
+    process.exit(1);
   }
 }
 
